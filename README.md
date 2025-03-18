@@ -20,3 +20,8 @@ Get Track's Audio Features - Deprecated: /audio-features/{id} [Official Spotify 
 Get Track's Audio Analysis - Deprecated: /audio-analysis/{id} [Official Spotify Documentation](https://developer.spotify.com/documentation/web-api/reference/get-audio-analysis)
 
 Get Artist: /artists/{id} [Official Spotify Documentation](https://developer.spotify.com/documentation/web-api/reference/get-an-artist)
+
+## Authors
+
+[Chris Kiriakou](https://github.com/ckiri)
+[Dominik Agres](https://github.com/agresdominik)
