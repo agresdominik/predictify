@@ -4,6 +4,11 @@
 
 A Data analysis tool to scrape your Spotify History usage and let a ML-Model predict your next songs
 
+## Authentication API
+
+[Official Documentation](https://developer.spotify.com/documentation/web-api/tutorials/getting-started)
+[Authorization Code Flow](https://developer.spotify.com/documentation/web-api/tutorials/code-flow)
+
 ## Usable possible APIs
 
 Recently Played Tracks: /me/player/recently-played [Official Spotify Documentation](https://developer.spotify.com/documentation/web-api/reference/get-recently-played)
