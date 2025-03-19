@@ -1,16 +1,16 @@
-import dotenv
-import time
-from urllib.parse import urlencode, urlparse, parse_qs
-from http.server import BaseHTTPRequestHandler, HTTPServer
-import requests
-import os
 import json
+import os
+import time
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.parse import parse_qs, urlencode, urlparse
 
+import dotenv
+import requests
 
 TOKEN_FILE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'env', 'tokens.json')
 
 
-def authenticate(scope: str) -> tuple:
+def authenticate(scope: str) -> str:
     """
     This function authenticates the user and returns the access token
 
@@ -29,14 +29,14 @@ def authenticate(scope: str) -> tuple:
             access_token, refresh_token = _refresh_access_token(refresh_token, spotify_client_id, spotify_client_secret)
             _save_tokens(access_token, refresh_token)
             return access_token
-    
+
     auth_url = _get_authorization_url(spotify_client_id, spotify_redirect_uri, scope)
     print(f'Please go to the following URL to authorize the app: {auth_url}')
 
     authorization_code = _start_server_and_wait_for_code()
 
     access_token, refresh_token = _exchange_code_for_token(authorization_code, redirect_uri=spotify_redirect_uri,
-                                                          client_id=spotify_client_id, client_secret=spotify_client_secret)
+                                                           client_id=spotify_client_id, client_secret=spotify_client_secret)
 
     _save_tokens(access_token, refresh_token)
 
@@ -96,7 +96,7 @@ def _start_server_and_wait_for_code() -> any:
             self.send_response(200)
             self.end_headers()
             self.wfile.write(b"Authorization successful! You can close this window.")
-    
+
     server = HTTPServer(('localhost', 8888), CallbackHandler)
     print("Starting server to capture the authorization code...")
     server.handle_request()
