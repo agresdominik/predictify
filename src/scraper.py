@@ -1,7 +1,12 @@
 import requests
+
 from auth import authenticate
 
+
 def main():
+    """
+    This function is the main function that will be executed when the script is run
+    """
     scope = "user-read-recently-played"
     bearer_token = authenticate(scope)
     last_played_track = _get_last_played_track(bearer_token=bearer_token)
