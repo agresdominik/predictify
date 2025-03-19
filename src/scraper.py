@@ -1,6 +1,6 @@
 import requests
 
-from auth import authenticate
+from auth import authenticate, simple_authenticate
 from database_handler import Database, Table
 
 db = Database('spotify_scraped.db')
@@ -20,8 +20,9 @@ def main():
 
     # Once a day
     all_track_ids = db.read_all_rows(Table.RECENTLY_PLAYED, 'track_id')
+    bearer_toke_simple = simple_authenticate()
     for track_id in all_track_ids:
-        response = _get_track_information(track_id=track_id, bearer_token=bearer_token)
+        response = _get_track_information(track_id=track_id[0], bearer_token=bearer_toke_simple)
         print(response)
 
     # Close the database connection
