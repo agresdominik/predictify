@@ -1,3 +1,4 @@
+import base64
 import json
 import os
 import time
@@ -8,6 +9,35 @@ import dotenv
 import requests
 
 TOKEN_FILE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'env', 'tokens.json')
+
+
+def simple_authenticate(grant_type: str = "client_credentials") -> str:
+    """
+    This function authenticates the user and returns the access token
+
+    :return: str
+    """
+    spotify_client_id, spotify_client_secret, spotify_redirect_uri = _read_env_file()
+    token_url = "https://accounts.spotify.com/api/token"
+    auth_value = f"{spotify_client_id}:{spotify_client_secret}"
+    auth_header = base64.b64encode(auth_value.encode('utf-8')).decode('utf-8')
+
+    headers = {
+        "Authorization": f"Basic {auth_header}",
+        "Content-Type": "application/x-www-form-urlencoded"
+    }
+
+    data = {
+        "grant_type": f"{grant_type}"
+    }
+
+    response = requests.post(token_url, headers=headers, data=data)
+
+    if response.status_code == 200:
+        access_token = response.json().get('access_token')
+        return access_token
+    else:
+        print(f"Error {response.status_code}: {response.text}")
 
 
 def authenticate(scope: str) -> str:
