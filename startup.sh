@@ -11,4 +11,4 @@ else
     exit 1
 fi
 
-.venv/bin/python3 src/scraper.py
+.venv/bin/python3 src/runtime.py
