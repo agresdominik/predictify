@@ -1,18 +1,24 @@
 FROM    alpine:latest
 
-WORKDIR /root
+WORKDIR     /root
 
-RUN     apk update && \
-        apk add --no-cache \
-            openssh \
-            python3 \
-            sqlite \
-            pip \
+RUN         apk update && \
+                apk add --no-cache \
+                openssh \
+                python3 \
+                py3-pip \
+                sqlite
 
-EXPOSE      80
 EXPOSE      22
 
-VOLUME  /root/data
-VOLUME  /root/app
+RUN         mkdir /root/src
 
-ENTRYPOINT  /root/startup.sh;
+COPY        ./startup.sh /root
+COPY        ./requirements.txt /root
+COPY        ./src/ /root/src/
+
+RUN         ls -la
+
+VOLUME      /root
+
+ENTRYPOINT  ["/bin/sh", "/root/startup.sh"]
