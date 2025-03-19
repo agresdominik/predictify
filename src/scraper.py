@@ -18,12 +18,28 @@ def main():
     # Once each 30 mins
     _read_recently_played_page_and_add_to_db(bearer_token=bearer_token)
 
+    bearer_token_simple = simple_authenticate()
     # Once a day
-    all_track_ids = db.read_all_rows(Table.RECENTLY_PLAYED, 'track_id')
-    bearer_toke_simple = simple_authenticate()
-    for track_id in all_track_ids:
-        response = _get_track_information(track_id=track_id[0], bearer_token=bearer_toke_simple)
-        print(response)
+    all_track_ids_recently_played = db.read_all_rows(Table.RECENTLY_PLAYED, 'track_id')
+    all_track_ids_saved = db.read_all_rows(Table.TRACK_INFORMATION, 'track_id')
+    all_track_ids_missing = list(set(all_track_ids_recently_played) - set(all_track_ids_saved))
+    for track_id in all_track_ids_missing:
+        response = _get_track_information(track_id=track_id[0], bearer_token=bearer_token_simple)
+        db.add_row(Table.TRACK_INFORMATION, (response['id'], response['name']))
+    # Once a day
+    all_album_ids_recently_played = db.read_all_rows(Table.RECENTLY_PLAYED, 'album_id')
+    all_album_ids_saved = db.read_all_rows(Table.ALBUM_INFORMATION, 'album_id')
+    all_album_ids_missing = list(set(all_album_ids_recently_played) - set(all_album_ids_saved))
+    for album_id in all_album_ids_missing:
+        response = _get_album_information(album_id=album_id[0], bearer_token=bearer_token_simple)
+        db.add_row(Table.ALBUM_INFORMATION, (response['id'], response['name']))
+    # Once a day
+    all_artist_ids_recently_played = db.read_all_rows(Table.RECENTLY_PLAYED, 'artist_id')
+    all_artist_ids_saved = db.read_all_rows(Table.ARTIST_INFORMATION, 'artist_id')
+    all_artist_ids_missing = list(set(all_artist_ids_recently_played) - set(all_artist_ids_saved))
+    for artist_id in all_artist_ids_missing:
+        response = _get_artist_information(artist_id=artist_id[0], bearer_token=bearer_token_simple)
+        db.add_row(Table.ARTIST_INFORMATION, (response['id'], response['name']))
 
     # Close the database connection
     db.close()
@@ -72,6 +88,44 @@ def _get_track_information(track_id: str, bearer_token: str) -> dict:
     """
 
     url = f"https://api.spotify.com/v1/tracks/{track_id}"
+    header = {
+        'Authorization': f'Bearer {bearer_token}'
+    }
+
+    response = requests.get(url, headers=header)
+    response_json = response.json()
+    return response_json
+
+
+def _get_artist_information(artist_id: str, bearer_token: str) -> dict:
+    """
+    This function returns the artist information based on the artist id
+
+    :param artist_id: str
+    :param bearer_token: str
+    :return: dict
+    """
+
+    url = f"https://api.spotify.com/v1/artists/{artist_id}"
+    header = {
+        'Authorization': f'Bearer {bearer_token}'
+    }
+
+    response = requests.get(url, headers=header)
+    response_json = response.json()
+    return response_json
+
+
+def _get_album_information(album_id: str, bearer_token: str) -> dict:
+    """
+    This function returns the album information based on the album id
+
+    :param album_id: str
+    :param bearer_token: str
+    :return: dict
+    """
+
+    url = f"https://api.spotify.com/v1/albums/{album_id}"
     header = {
         'Authorization': f'Bearer {bearer_token}'
     }
