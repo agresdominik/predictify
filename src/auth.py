@@ -1,5 +1,6 @@
 import base64
 import json
+import logging as log
 import os
 import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -37,7 +38,7 @@ def simple_authenticate(grant_type: str = "client_credentials") -> str:
         access_token = response.json().get('access_token')
         return access_token
     else:
-        print(f"Error {response.status_code}: {response.text}")
+        log.error(f"Error {response.status_code}: {response.text}")
 
 
 def authenticate(scope: str) -> str:
@@ -55,7 +56,7 @@ def authenticate(scope: str) -> str:
         if time.time() < expires_at:
             return access_token
         else:
-            print(f"Token for scope {scope} expired, refreshing...")
+            log.info(f"Token for scope {scope} expired, refreshing...")
             access_token, expires_at = _refresh_access_token(refresh_token, spotify_client_id, spotify_client_secret)
             _refresh_tokens_file(access_token, scope, expires_at)
             return access_token
@@ -128,7 +129,7 @@ def _start_server_and_wait_for_code() -> any:
             self.wfile.write(b"Authorization successful! You can close this window.")
 
     server = HTTPServer(('localhost', 8888), CallbackHandler)
-    print("Starting server to capture the authorization code...")
+    log.info("Starting server to capture the authorization code...")
     server.handle_request()
     return server.authorization_code
 
@@ -253,4 +254,4 @@ def _refresh_tokens_file(access_token: str, scope: str, expires_at) -> None:
         with open(TOKEN_FILE_PATH, 'w') as file:
             json.dump(tokens, file, indent=4)
     else:
-        print(f"Error: Scope '{scope}' or refresh_token not found in the tokens file.")
+        log.error(f"Error: Scope '{scope}' or refresh_token not found in the tokens file.")

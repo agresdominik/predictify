@@ -1,3 +1,4 @@
+import logging as log
 import sqlite3
 from enum import Enum
 
@@ -28,21 +29,31 @@ class Database:
         self.cursor.execute(f'''
         CREATE TABLE IF NOT EXISTS {Table.TRACK_INFORMATION.value} (
             track_id TEXT PRIMARY KEY,
-            title TEXT
+            title TEXT,
+            duration_ms INTEGER,
+            explicit BOOLEAN,
+            popularity INTEGER
         );
         ''')
 
         self.cursor.execute(f'''
         CREATE TABLE IF NOT EXISTS {Table.ARTIST_INFORMATION.value} (
             artist_id TEXT PRIMARY KEY,
-            artist_name TEXT
+            artist_name TEXT,
+            followers INTEGER,
+            genres TEXT,
+            popularity INTEGER
         );
         ''')
 
         self.cursor.execute(f'''
         CREATE TABLE IF NOT EXISTS {Table.ALBUM_INFORMATION.value} (
             album_id TEXT PRIMARY KEY,
-            album_name TEXT
+            album_name TEXT,
+            album_type TEXT,
+            total_tracks INTEGER,
+            release_date TEXT,
+            label TEXT
         );
         ''')
 
@@ -77,7 +88,7 @@ class Database:
             self.cursor.execute(query, values)
             self.conn.commit()
         except Exception as e:
-            print(f"Error: {e}")
+            log.debug(f"Error: {e}")
 
     def read_all_rows(self, table: Table, column: str = "*"):
         """Read all rows from the specified table"""
@@ -111,19 +122,5 @@ class Database:
             rows = self.cursor.fetchall()
             return rows
         except Exception as e:
-            print(f"Error retrieving total overview: {e}")
+            log.error(f"Error retrieving total overview: {e}")
             return []
-
-            """
-            print(rows)
-
-            if rows:
-                print(f"{'Played At':<20} {'Track ID':<20} {'Track Title':<50} {'Artist ID':<20} {'Artist Name':<50} {'Album ID':<20} {'Album Name':<50}")
-                print("-" * 160)
-                for row in rows:
-                    played_at, track_id, title, artist_id, artist_name, album_id, album_name = row
-                    print(f"{played_at:<20} {track_id:<20} {title:<50} {artist_id:<20} {artist_name:<50} {album_id:<20} {album_name:<50}")
-            else:
-                print("No recently played songs found.")
-        except Exception as e:
-            print(f"Error retrieving total overview: {e}")"""

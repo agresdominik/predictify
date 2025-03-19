@@ -6,7 +6,7 @@ from database_handler import Database, Table
 db = Database('spotify_scraped.db')
 
 
-def main():
+def scraping():
     """
     This function is the main function that will be executed when the script is run
     """
@@ -17,31 +17,8 @@ def main():
 
     # Once each 30 mins
     _read_recently_played_page_and_add_to_db(bearer_token=bearer_token)
+    _scrape_missing_infos()
 
-    bearer_token_simple = simple_authenticate()
-    # Once a day
-    all_track_ids_recently_played = db.read_all_rows(Table.RECENTLY_PLAYED, 'track_id')
-    all_track_ids_saved = db.read_all_rows(Table.TRACK_INFORMATION, 'track_id')
-    all_track_ids_missing = list(set(all_track_ids_recently_played) - set(all_track_ids_saved))
-    for track_id in all_track_ids_missing:
-        response = _get_track_information(track_id=track_id[0], bearer_token=bearer_token_simple)
-        db.add_row(Table.TRACK_INFORMATION, (response['id'], response['name']))
-    # Once a day
-    all_album_ids_recently_played = db.read_all_rows(Table.RECENTLY_PLAYED, 'album_id')
-    all_album_ids_saved = db.read_all_rows(Table.ALBUM_INFORMATION, 'album_id')
-    all_album_ids_missing = list(set(all_album_ids_recently_played) - set(all_album_ids_saved))
-    for album_id in all_album_ids_missing:
-        response = _get_album_information(album_id=album_id[0], bearer_token=bearer_token_simple)
-        db.add_row(Table.ALBUM_INFORMATION, (response['id'], response['name']))
-    # Once a day
-    all_artist_ids_recently_played = db.read_all_rows(Table.RECENTLY_PLAYED, 'artist_id')
-    all_artist_ids_saved = db.read_all_rows(Table.ARTIST_INFORMATION, 'artist_id')
-    all_artist_ids_missing = list(set(all_artist_ids_recently_played) - set(all_artist_ids_saved))
-    for artist_id in all_artist_ids_missing:
-        response = _get_artist_information(artist_id=artist_id[0], bearer_token=bearer_token_simple)
-        db.add_row(Table.ARTIST_INFORMATION, (response['id'], response['name']))
-
-    # Close the database connection
     db.close()
 
 
@@ -135,5 +112,39 @@ def _get_album_information(album_id: str, bearer_token: str) -> dict:
     return response_json
 
 
-if __name__ == '__main__':
-    main()
+def _scrape_missing_infos():
+    """
+    """
+    global db
+
+    bearer_token_simple = simple_authenticate()
+
+    # Track Info
+    all_track_ids_recently_played = db.read_all_rows(Table.RECENTLY_PLAYED, 'track_id')
+    all_track_ids_saved = db.read_all_rows(Table.TRACK_INFORMATION, 'track_id')
+    all_track_ids_missing = list(set(all_track_ids_recently_played) - set(all_track_ids_saved))
+    for track_id in all_track_ids_missing:
+        response = _get_track_information(track_id=track_id[0], bearer_token=bearer_token_simple)
+        db.add_row(Table.TRACK_INFORMATION, (response['id'], response['name'], response['duration_ms'], response['explicit'], response['popularity']))
+    # Album Info
+    all_album_ids_recently_played = db.read_all_rows(Table.RECENTLY_PLAYED, 'album_id')
+    all_album_ids_saved = db.read_all_rows(Table.ALBUM_INFORMATION, 'album_id')
+    all_album_ids_missing = list(set(all_album_ids_recently_played) - set(all_album_ids_saved))
+    for album_id in all_album_ids_missing:
+        response = _get_album_information(album_id=album_id[0], bearer_token=bearer_token_simple)
+        try:
+            release_year = response['release_date'][:4]
+        except Exception:
+            release_year = ""
+        db.add_row(Table.ALBUM_INFORMATION, (response['id'], response['name'], response['album_type'], response['total_tracks'], release_year, response['label']))
+    # Artist Info
+    all_artist_ids_recently_played = db.read_all_rows(Table.RECENTLY_PLAYED, 'artist_id')
+    all_artist_ids_saved = db.read_all_rows(Table.ARTIST_INFORMATION, 'artist_id')
+    all_artist_ids_missing = list(set(all_artist_ids_recently_played) - set(all_artist_ids_saved))
+    for artist_id in all_artist_ids_missing:
+        response = _get_artist_information(artist_id=artist_id[0], bearer_token=bearer_token_simple)
+        try:
+            genre = response['genres'][0]
+        except IndexError:
+            genre = ""
+        db.add_row(Table.ARTIST_INFORMATION, (response['id'], response['name'], response['followers']['total'], genre, response['popularity']))
