@@ -1,0 +1,28 @@
+# .pre-commit-config.yaml
+
+repos:
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+    -   id: trailing-whitespace # Remove trailing whitespace
+    -   id: end-of-file-fixer # Ensure a single newline at the end of a file
+    -   id: check-yaml # Check if the YAML files are valid
+    -   id: check-json # Check if the JSON files are valid
+    -   id: check-added-large-files # Prevent large files from being committed
+        args: ['--maxkb=1000']
+    -   id: check-ast # Check for parse errors in Python files
+    -   id: debug-statements # Check for print statements and pdb calls
+    -   id: end-of-file-fixer # Ensure a single newline at the end of a file
+
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: ['--profile=black']
+
+  - repo: https://github.com/PyCQA/flake8
+    rev: 7.1.1
+    hooks:
+      - id: flake8
+        args: ['--extend-ignore=E501,E402,W503,E721','--max-line-length=100']
