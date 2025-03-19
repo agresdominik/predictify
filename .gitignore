@@ -1,3 +1,15 @@
+# Test running file
+main_test.py
+
+# databases
+*.db
+
+# Custom Tokens file/rotator
+tokens.json
+
+# Visual Studio Code
+.vscode/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -129,10 +141,9 @@ celerybeat.pid
 
 # Environments
 .env
+!.env.example
 .venv
-env/
 venv/
-ENV/
 env.bak/
 venv.bak/
 
