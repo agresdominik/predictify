@@ -3,7 +3,7 @@ import requests
 from auth import authenticate, simple_authenticate
 from database_handler import Database, Table
 
-db = Database('spotify_scraped.db')
+db = Database('./data/spotify_scraped.db')
 
 
 def scraping():
