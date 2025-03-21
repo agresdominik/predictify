@@ -31,8 +31,6 @@ To run predictify inside a container, first make sure to build the image:
 ```sh
 make dockerfile
 ```
-> [!NOTE]  
-> 
 Create a seperate data directory (e.g. `docker-data`):
 ```sh
 mkdir docker-data
