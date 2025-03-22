@@ -1,6 +1,9 @@
 import logging as log
+import os
 import sqlite3
 from enum import Enum
+
+DATABASE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'spotify_scraped.db')
 
 
 class Table(Enum):
@@ -16,7 +19,7 @@ class Database:
     A class to handle the database connection and operations
     """
 
-    def __init__(self, db_name):
+    def __init__(self, db_name: str = DATABASE_PATH):
         """Initialize the connection to the database"""
         self.db_name = db_name
         self.conn = sqlite3.connect(db_name)
