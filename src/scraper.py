@@ -1,9 +1,13 @@
+import os
+
 import requests
 
 from auth import authenticate, simple_authenticate
 from database_handler import Database, Table
 
-db = Database('./data/spotify_scraped.db')
+# Define path to folder containing the database
+database_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'spotify_scraped.db')
+db = Database(database_path)
 
 
 def scraping():

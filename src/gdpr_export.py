@@ -2,7 +2,7 @@ import json
 import os
 from collections import defaultdict
 
-folder_path = os.path.join(os.getcwd(), 'gdpr_data')
+folder_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'gdpr_data')
 
 data_dictionary_name = defaultdict(int)
 data_dictionary_artist = defaultdict(int)
