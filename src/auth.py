@@ -9,7 +9,7 @@ from urllib.parse import parse_qs, urlencode, urlparse
 import dotenv
 import requests
 
-TOKEN_FILE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'env', 'tokens.json')
+TOKEN_FILE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../data', 'tokens.json')
 
 
 def simple_authenticate(grant_type: str = "client_credentials") -> str:
@@ -102,7 +102,7 @@ def _read_env_file() -> tuple:
     :return: tuple
     """
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    dotenv_folder_path = os.path.join(current_dir, 'env')
+    dotenv_folder_path = os.path.join(current_dir, '../config')
     dotenv_path = os.path.join(dotenv_folder_path, '.env')
     contents = dotenv.dotenv_values(dotenv_path=dotenv_path)
     spotify_client_id = contents['SPOTIFY_CLIENT_ID']
