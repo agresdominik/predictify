@@ -7,11 +7,9 @@ Streaming_History*
 # Test running file
 main_test.py
 
-# databases
-*.db
-
-# Custom Tokens file/rotator
-tokens.json
+# data dir
+data/*
+data-docker/
 
 # Visual Studio Code
 .vscode/

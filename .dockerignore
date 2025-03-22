@@ -1,0 +1,11 @@
+logs/
+data/
+src/__pycache__/
+.git
+*.md
+.venv
+LICENSE
+MAKEFILE
+pytest.ini
+test/
+
