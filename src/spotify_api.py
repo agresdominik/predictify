@@ -52,7 +52,6 @@ def get_multiple_tracks_information(bearer_token: str, *track_ids: str) -> dict:
         url_suffix = url_suffix + track_id + "%2C"
 
     url = f"https://api.spotify.com/v1/tracks/{url_suffix}"
-    return url
     header = {
         'Authorization': f'Bearer {bearer_token}'
     }
