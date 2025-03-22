@@ -1,3 +1,5 @@
+import logging as log
+
 import requests
 
 
@@ -42,16 +44,22 @@ def get_multiple_tracks_information(bearer_token: str, *track_ids: str) -> dict:
     """
     This function returns the track information based on the track id
 
-    :param track_id: str
+    :param *track_id: str
     :param bearer_token: str
     :return: dict
     """
-    url_suffix = ""
+    if len(track_ids) > 50:
+        log.error('Passed more than 50 track ids to get_multiple_tracks_information')
+        return None
+
+    url_suffix = "ids="
+    separator = ","
 
     for track_id in track_ids:
-        url_suffix = url_suffix + track_id + "%2C"
+        url_suffix = url_suffix + track_id + separator
 
-    url = f"https://api.spotify.com/v1/tracks/{url_suffix}"
+    url = f"https://api.spotify.com/v1/tracks?{url_suffix}"
+    url = url[:-len(separator)]
     header = {
         'Authorization': f'Bearer {bearer_token}'
     }
