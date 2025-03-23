@@ -60,21 +60,25 @@ def _scrape_missing_info(bearer_token_simple: str, table_name: Table, id_field_n
     ids = []
     processed_ids = set()
 
-    for i, id_value in enumerate(all_ids_missing):
+    counter = 0
+
+    for id_value in all_ids_missing:
 
         id_value_str = id_value[0]
 
         if id_value_str not in processed_ids:
             ids.append(id_value_str)
             processed_ids.add(id_value_str)
+            counter += 1
 
-        if (i + 1) % limit == 0:
+        if (counter + 1) % limit == 0 and len(ids) > 0:
             ids_tuple = tuple(ids)
             ids.clear()
             response = get_multiple_field_information(bearer_token_simple, endpoint_name, limit, *ids_tuple)
             _add_data_to_database(table_name, response)
+            counter = 0
 
-    if ids:
+    if len(ids) > 0:
         ids_tuple = tuple(ids)
         ids.clear()
         response = get_multiple_field_information(bearer_token_simple, endpoint_name, limit, *ids_tuple)
