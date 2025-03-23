@@ -33,7 +33,7 @@ make dockerfile
 ```
 Create a seperate data directory (e.g. `docker-data`):
 ```sh
-mkdir docker-data
+mkdir data-docker
 ```
 > [!NOTE]  
 > To detatch the container to run it in the background add the `--detach` directly after the `run` command.
