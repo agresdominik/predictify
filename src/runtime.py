@@ -1,8 +1,11 @@
 import argparse
 from time import sleep
 
+from database_handler import Database
 from gdpr_export import export_gdpr_data
 from scraper import scrape_missing_infos, scraping
+
+db = Database()
 
 # Initialize the parser
 parser = argparse.ArgumentParser(description="A python script written in Python3.13 which continuously checks what spotify songs "
@@ -32,3 +35,7 @@ while True:
     scraping()
     print('Done Scraping')
     sleep(1800)
+
+
+# TODO: Trap this:
+db.close()
