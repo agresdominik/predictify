@@ -81,17 +81,14 @@ def populate_ids(all_songs_played: list):
             track_ids_tuple = tuple(track_ids)
             track_ids.clear()
             response = get_multiple_tracks_information(token, *track_ids_tuple)
-            all_songs_played_info.append(_sort_and_create_required_dataset(response))
+            all_songs_played_info.extend(_sort_and_create_required_dataset(response))
 
     if track_ids:
         track_ids_tuple = tuple(track_ids)
         response = get_multiple_tracks_information(token, *track_ids_tuple)
-        all_songs_played_info.append(_sort_and_create_required_dataset(response))
+        all_songs_played_info.extend(_sort_and_create_required_dataset(response))
 
-    json_file_path = 'data.json'
-    # Writing dictionary to a JSON file
-    with open(json_file_path, 'w') as json_file:
-        json.dump(all_songs_played_info, json_file, indent=4)
+    return all_songs_played_info
 
 
 def _sort_and_create_required_dataset(response) -> dict:
@@ -109,18 +106,41 @@ def _sort_and_create_required_dataset(response) -> dict:
     return track_list
 
 
-def insert_data_into_db(all_songs_played: dict):
+def _fill_missing_ids(all_songs_played, all_songs_catalogued):
+
+    # Create a dictionary to map track_id to artist_id and album_id
+    track_id_to_artist_album = {data['track_id']: {'album_id': data['album_id'], 'artist_id': data['artist_id']} for data in all_songs_catalogued}
+
+    # Now, we will update the original `tracks` list by adding artist_id and album_id
+    for track in all_songs_played:
+        track_info = track_id_to_artist_album.get(track['id'])
+        if track_info:
+            track['artist_id'] = track_info['artist_id']
+            track['album_id'] = track_info['album_id']
+
+    return all_songs_played
+
+
+def insert_data_into_db(all_songs_played: list):
     """
     This function takes a list of all played songs and inserts these into the database.
 
     :param: all_songs_played list of all songs
     """
-
     for entry in all_songs_played:
-        db.add_row(Table.RECENTLY_PLAYED, (entry['timestamp'], entry['id'], entry['']))
+        print(entry)
+        db.add_row(Table.ALBUM_INFORMATION, (entry['album_id'], 'fake_name', 'fake_type', 1, 'fake_date', 'fake_label'))
+        db.add_row(Table.ARTIST_INFORMATION, (entry['artist_id']))
+        db.add_row(Table.TRACK_INFORMATION, (entry['track_id']))
 
 
 all_songs_played = read_gdrp_data()
 n = 100
 all_songs_played = all_songs_played[-n:]
-populate_ids(all_songs_played)
+all_songs_catalogued = populate_ids(all_songs_played)
+all_songs_played = _fill_missing_ids(all_songs_played, all_songs_catalogued)
+
+json_file_path = 'data.json'
+# Writing dictionary to a JSON file
+with open(json_file_path, 'w') as json_file:
+    json.dump(all_songs_played, json_file, indent=4)
