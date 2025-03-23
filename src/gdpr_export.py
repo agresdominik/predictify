@@ -1,7 +1,9 @@
 import json
 import os
 
+from auth import simple_authenticate
 from database_handler import Database, Table
+from spotify_api import get_multiple_tracks_information
 
 # Define the absolute folder path to the folder containing the gdrp retrieved data
 folder_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'gdpr_data')
@@ -9,16 +11,14 @@ folder_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'da
 db = Database()
 
 
-def read_gdrp_data() -> dict:
+def read_gdrp_data() -> list:
     """
     This function reads all .json files in the folder containing the gdpr data.
     This data is then extracted into a dict and sorted by timestamp ascending.
 
     :return: all_songs_played: A dict with an items field containing all songs played for the user
     """
-    all_songs_played = {
-        'items': []
-    }
+    all_songs_played = []
 
     for filename in os.listdir(folder_path):
 
@@ -35,22 +35,22 @@ def read_gdrp_data() -> dict:
                     try:
                         track = {
                             'timestamp': entry['ts'],
-                            'id': extract_id(entry['spotify_track_uri']),
+                            'id': _extract_id(entry['spotify_track_uri']),
                             'track_name': entry['master_metadata_track_name'],
                             'artist_name': entry['master_metadata_album_artist_name'],
                             'album_name': entry['master_metadata_album_album_name'],
                             'conn_country': entry['conn_country'],
                             'ms_played': entry['ms_played']
                             }
-                        all_songs_played['items'].append(track)
+                        all_songs_played.append(track)
                     except Exception as e:
                         print(f'Missing field: {e}')
 
-    all_songs_played['items'] = sorted(all_songs_played['items'], key=lambda x: x['timestamp'])
+    all_songs_played = sorted(all_songs_played, key=lambda x: x['timestamp'])
     return all_songs_played
 
 
-def extract_id(spotify_id: str) -> str:
+def _extract_id(spotify_id: str) -> str:
     """
     This function gets a id with extra details and extracts the id from it.
 
@@ -59,14 +59,54 @@ def extract_id(spotify_id: str) -> str:
     """
     prefix = "spotify:track:"
     prefix_removed_id = spotify_id[len(prefix):]
-    print(prefix_removed_id)
     return prefix_removed_id
 
 
-def populate_ids(all_songs_played: dict):
-    pass
-    # for entry in all_songs_played['items']:
-    #   track_id = entry['id']
+def populate_ids(all_songs_played: list):
+
+    track_ids = []
+    all_songs_played_info = []
+    token = simple_authenticate()
+
+    processed_songs_id = set()
+
+    for i, entry in enumerate(all_songs_played):
+        track_id = entry['id']
+
+        if track_id not in processed_songs_id:
+            track_ids.append(track_id)
+            processed_songs_id.add(track_id)
+
+        if (i + 1) % 50 == 0:
+            track_ids_tuple = tuple(track_ids)
+            track_ids.clear()
+            response = get_multiple_tracks_information(token, *track_ids_tuple)
+            all_songs_played_info.append(_sort_and_create_required_dataset(response))
+
+    if track_ids:
+        track_ids_tuple = tuple(track_ids)
+        response = get_multiple_tracks_information(token, *track_ids_tuple)
+        all_songs_played_info.append(_sort_and_create_required_dataset(response))
+
+    json_file_path = 'data.json'
+    # Writing dictionary to a JSON file
+    with open(json_file_path, 'w') as json_file:
+        json.dump(all_songs_played_info, json_file, indent=4)
+
+
+def _sort_and_create_required_dataset(response) -> dict:
+
+    track_list = []
+
+    for entry in response['tracks']:
+        track_data = {
+            'track_id': entry['id'],
+            'album_id': entry['album']['id'],
+            'artist_id': entry['artists'][0]['id']
+        }
+        track_list.append(track_data)
+
+    return track_list
 
 
 def insert_data_into_db(all_songs_played: dict):
@@ -76,8 +116,11 @@ def insert_data_into_db(all_songs_played: dict):
     :param: all_songs_played list of all songs
     """
 
-    for entry in all_songs_played['items']:
+    for entry in all_songs_played:
         db.add_row(Table.RECENTLY_PLAYED, (entry['timestamp'], entry['id'], entry['']))
 
 
-read_gdrp_data()
+all_songs_played = read_gdrp_data()
+n = 100
+all_songs_played = all_songs_played[-n:]
+populate_ids(all_songs_played)

@@ -40,7 +40,7 @@ def get_track_information(track_id: str, bearer_token: str) -> dict:
     return response_json
 
 
-def get_multiple_tracks_information(bearer_token: str, *track_ids: str) -> dict:
+def get_multiple_tracks_information(bearer_token: str, *track_ids) -> dict:
     """
     This function returns the track information based on the track id
 
@@ -54,7 +54,6 @@ def get_multiple_tracks_information(bearer_token: str, *track_ids: str) -> dict:
 
     url_suffix = "ids="
     separator = ","
-
     for track_id in track_ids:
         url_suffix = url_suffix + track_id + separator
 
