@@ -1,9 +1,12 @@
-import logging as log
 import os
 import sqlite3
 from enum import Enum
 
+from logger import LoggerWrapper
+
 DATABASE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'spotify_scraped.db')
+
+log = LoggerWrapper()
 
 
 class Table(Enum):
@@ -82,6 +85,7 @@ class Database:
 
         # Commit the changes
         self.conn.commit()
+        log.debug("Initialised tables")
 
     def add_row(self, table: Table, values):
         """Add a new row into the specified table"""
@@ -91,13 +95,17 @@ class Database:
             self.cursor.execute(query, values)
             self.conn.commit()
         except Exception as e:
-            log.debug(f"Error: {e}")
+            log.error(f"Error while inserting row into table {table.value}: {e}")
 
     def read_all_rows(self, table: Table, column: str = "*"):
         """Read all rows from the specified table"""
-        self.cursor.execute(f"SELECT {column} FROM {table.value}")
-        rows = self.cursor.fetchall()
-        return rows
+        try:
+            self.cursor.execute(f"SELECT {column} FROM {table.value}")
+            rows = self.cursor.fetchall()
+            return rows
+        except Exception as e:
+            log.error(f"Error while reading all rows from table {table.value}: {e}")
+            return []
 
     def close(self):
         """Close the database connection"""
@@ -125,5 +133,6 @@ class Database:
             rows = self.cursor.fetchall()
             return rows
         except Exception as e:
-            log.error(f"Error retrieving total overview: {e}")
+            log.error(f"Error retrieving total overview: {e}"
+                      f"\nQuery Executed: {query}")
             return []
