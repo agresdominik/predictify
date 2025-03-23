@@ -1,8 +1,28 @@
+import argparse
 from time import sleep
 
-from scraper import scraping
+from gdpr_export import export_gdpr_data
+from scraper import scrape_missing_infos, scraping
 
-# Run forever on intervals of 30 minutes
+# Initialize the parser
+parser = argparse.ArgumentParser(description="Example with optional arguments")
+
+# Add optional arguments
+parser.add_argument('--verbose', action='store_true', help="Enable verbose output")
+parser.add_argument('--export', action='store_true', help="Export the gdpr data from spotify if not done already")
+
+# Parse the arguments
+args = parser.parse_args()
+
+if args.verbose:
+    print('Enabled verbose mode')
+    # implement logger
+
+if args.export:
+    print('Scraping GDPR Data')
+    export_gdpr_data()
+    scrape_missing_infos()
+
 while True:
     scraping()
     sleep(1800)

@@ -22,7 +22,7 @@ def scraping():
 
     # Once each 30 mins
     _read_recently_played_page_and_add_to_db(bearer_token=bearer_token)
-    _scrape_missing_infos()
+    scrape_missing_infos()
 
     db.close()
 
@@ -42,7 +42,7 @@ def _read_recently_played_page_and_add_to_db(bearer_token: str):
         db.add_row(Table.RECENTLY_PLAYED, (played_at, track_id, artist_id, album_id))
 
 
-def _scrape_missing_infos():
+def scrape_missing_infos():
     """
     """
     global db

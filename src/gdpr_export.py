@@ -1,4 +1,5 @@
 import json
+import logging as log
 import os
 
 from auth import simple_authenticate
@@ -11,7 +12,7 @@ folder_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'da
 db = Database()
 
 
-def read_gdrp_data() -> list:
+def _read_gdrp_data() -> list:
     """
     This function reads all .json files in the folder containing the gdpr data.
     This data is then extracted into a dict and sorted by timestamp ascending.
@@ -62,7 +63,7 @@ def _extract_id(spotify_id: str) -> str:
     return prefix_removed_id
 
 
-def populate_ids(all_songs_played: list):
+def _populate_ids(all_songs_played: list):
 
     track_ids = []
     all_songs_played_info = []
@@ -121,26 +122,22 @@ def _fill_missing_ids(all_songs_played, all_songs_catalogued):
     return all_songs_played
 
 
-def insert_data_into_db(all_songs_played: list):
+def _insert_data_into_db(all_songs_played: list):
     """
     This function takes a list of all played songs and inserts these into the database.
 
     :param: all_songs_played list of all songs
     """
     for entry in all_songs_played:
-        print(entry)
-        db.add_row(Table.ALBUM_INFORMATION, (entry['album_id'], 'fake_name', 'fake_type', 1, 'fake_date', 'fake_label'))
-        db.add_row(Table.ARTIST_INFORMATION, (entry['artist_id']))
-        db.add_row(Table.TRACK_INFORMATION, (entry['track_id']))
+        try:
+            db.add_row(Table.RECENTLY_PLAYED, (entry['timestamp'], entry['id'], entry['artist_id'], entry['album_id']))
+        except Exception as e:
+            log.error(f'Failed adding {entry} to database, error {e}')
 
 
-all_songs_played = read_gdrp_data()
-n = 100
-all_songs_played = all_songs_played[-n:]
-all_songs_catalogued = populate_ids(all_songs_played)
-all_songs_played = _fill_missing_ids(all_songs_played, all_songs_catalogued)
-
-json_file_path = 'data.json'
-# Writing dictionary to a JSON file
-with open(json_file_path, 'w') as json_file:
-    json.dump(all_songs_played, json_file, indent=4)
+def export_gdpr_data(n_limit: int = 100):
+    all_songs_played = _read_gdrp_data()
+    all_songs_played = all_songs_played[-n_limit:]
+    all_songs_catalogued = _populate_ids(all_songs_played)
+    all_songs_played = _fill_missing_ids(all_songs_played, all_songs_catalogued)
+    _insert_data_into_db(all_songs_played)
