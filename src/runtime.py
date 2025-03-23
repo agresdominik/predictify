@@ -26,5 +26,7 @@ if args.export:
     scrape_missing_infos()
 
 while True:
+    print('Scraping API...')
     scraping()
+    print('Done Scraping')
     sleep(1800)

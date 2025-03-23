@@ -24,8 +24,7 @@ class Database:
         self.db_name = db_name
         self.conn = sqlite3.connect(db_name)
         self.cursor = self.conn.cursor()
-        if not os.path.exists(db_name):
-            self.create_tables()
+        self.create_tables()
 
     def create_tables(self):
         """Create the tables in the database"""

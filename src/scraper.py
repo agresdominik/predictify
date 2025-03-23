@@ -34,7 +34,7 @@ def _read_recently_played_page_and_add_to_db(bearer_token: str):
 
     last_played_track = get_last_played_track(bearer_token=bearer_token)
 
-    for track in last_played_track['items']:
+    for track in reversed(last_played_track['items']):
         track_id = track['track']['id']
         played_at = track['played_at']
         album_id = track['track']['album']['id']
