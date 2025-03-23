@@ -1,3 +1,15 @@
+# My testing file
+main_test.py
+
+# .db
+*.db
+
+# DS_Store
+.DS_Store
+
+# Gdpr Data file
+Streaming_History*
+
 # Test running file
 main_test.py
 

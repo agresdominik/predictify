@@ -9,7 +9,7 @@ from urllib.parse import parse_qs, urlencode, urlparse
 import dotenv
 import requests
 
-TOKEN_FILE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../data', 'tokens.json')
+TOKEN_FILE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'tokens.json')
 
 
 def simple_authenticate(grant_type: str = "client_credentials") -> str:
