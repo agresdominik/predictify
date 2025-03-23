@@ -47,6 +47,10 @@ docker run \
     predictify:unstable
 ```
 
+## GDPR Data
+
+If you have gdpr data, create a folder: ```data/gdpr_data``` and add all .json files containing your play history into it. In order to extract it, run the script: ```python3 src/runtime.py --export```
+
 ## Authors
 
 [Chris Kiriakou](https://github.com/ckiri)

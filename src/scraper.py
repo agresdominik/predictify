@@ -29,6 +29,7 @@ def scraping():
 
 def _read_recently_played_page_and_add_to_db(bearer_token: str):
     """
+    This function gets a list of song play history and adds it into the database.
     """
     global db
 
@@ -44,6 +45,7 @@ def _read_recently_played_page_and_add_to_db(bearer_token: str):
 
 def scrape_missing_infos():
     """
+
     """
     global db
 
