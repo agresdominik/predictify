@@ -27,7 +27,7 @@ if args.export:
     print('Scraping GDPR Data')
     # The next function can gat a int witch defines the amount of songs witch will be scraped from the gdpr files.
     # e.g. if 500 is input, the last 500 played songs will come up, if left empty, the last 100.
-    export_gdpr_data()
+    export_gdpr_data(1000000)
     scrape_missing_infos()
 
 while True:
