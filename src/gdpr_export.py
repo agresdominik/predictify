@@ -4,7 +4,7 @@ import os
 
 from auth import simple_authenticate
 from database_handler import Database, Table
-from spotify_api import get_multiple_tracks_information
+from spotify_api import get_multiple_field_information
 
 # Define the absolute folder path to the folder containing the gdrp retrieved data
 folder_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'gdpr_data')
@@ -71,22 +71,26 @@ def _populate_ids(all_songs_played: list):
 
     processed_songs_id = set()
 
-    for i, entry in enumerate(all_songs_played):
+    counter = 0
+
+    for entry in all_songs_played:
         track_id = entry['id']
 
         if track_id not in processed_songs_id:
             track_ids.append(track_id)
             processed_songs_id.add(track_id)
+            counter += 1
 
-        if (i + 1) % 50 == 0:
+        if (counter + 1) % 50 == 0 and len(track_ids) > 0:
             track_ids_tuple = tuple(track_ids)
             track_ids.clear()
-            response = get_multiple_tracks_information(token, *track_ids_tuple)
+            response = get_multiple_field_information(token, 'tracks', 50, *track_ids_tuple)
             all_songs_played_info.extend(_sort_and_create_required_dataset(response))
+            counter = 0
 
-    if track_ids:
+    if len(track_ids) > 0:
         track_ids_tuple = tuple(track_ids)
-        response = get_multiple_tracks_information(token, *track_ids_tuple)
+        response = get_multiple_field_information(token, 'tracks', 50, *track_ids_tuple)
         all_songs_played_info.extend(_sort_and_create_required_dataset(response))
 
     return all_songs_played_info
