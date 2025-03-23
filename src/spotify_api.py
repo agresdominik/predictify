@@ -104,3 +104,32 @@ def get_album_information(album_id: str, bearer_token: str) -> dict:
     response = requests.get(url, headers=header)
     response_json = response.json()
     return response_json
+
+
+def get_multiple_field_information(bearer_token: str, api_type: str, limit: int,  *track_ids) -> dict:
+    """
+    This function returns the track information based on the track id
+
+    :param *track_id: str
+    :param bearer_token: str
+    :return: dict
+    """
+
+    if len(track_ids) > limit:
+        log.error('Passed more than 20/50 ids to get_multiple_field_information')
+        return None
+
+    url_suffix = "ids="
+    separator = ","
+    for track_id in track_ids:
+        url_suffix = url_suffix + track_id + separator
+
+    url = f"https://api.spotify.com/v1/{api_type}?{url_suffix}"
+    url = url[:-len(separator)]
+    header = {
+        'Authorization': f'Bearer {bearer_token}'
+    }
+
+    response = requests.get(url, headers=header)
+    response_json = response.json()
+    return response_json
