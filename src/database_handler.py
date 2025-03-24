@@ -1,10 +1,9 @@
-import os
 import sqlite3
 from enum import Enum
 
 from logger import LoggerWrapper
 
-DATABASE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'spotify_scraped.db')
+# DATABASE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'spotify_scraped.db')
 
 log = LoggerWrapper()
 
@@ -22,7 +21,7 @@ class Database:
     A class to handle the database connection and operations
     """
 
-    def __init__(self, db_name: str = DATABASE_PATH):
+    def __init__(self, db_name: str):
         """Initialize the connection to the database"""
         self.db_name = db_name
         self.conn = sqlite3.connect(db_name)
@@ -66,8 +65,18 @@ class Database:
         self.cursor.execute(f'''
         CREATE TABLE IF NOT EXISTS {Table.TRACK_ATTRIBUTES.value} (
             track_id TEXT PRIMARY KEY,
-            attribute_name TEXT,
-            attribute_value TEXT
+            acousticness FLOAT,
+            danceability FLOAT,
+            duration_ms INTEGER,
+            energy FLOAT,
+            instrumentalness FLOAT,
+            key INTEGER,
+            liveness FLOAT,
+            loudness FLOAT,
+            speechiness FLOAT,
+            tempo FLOAT,
+            time_signature INTEGER,
+            valence FLOAT
         );
         ''')
 
@@ -79,7 +88,8 @@ class Database:
             album_id TEXT,
             FOREIGN KEY (track_id) REFERENCES {Table.TRACK_INFORMATION.value}(track_id),
             FOREIGN KEY (artist_id) REFERENCES {Table.ARTIST_INFORMATION.value}(artist_id),
-            FOREIGN KEY (album_id) REFERENCES {Table.ALBUM_INFORMATION.value}(album_id)
+            FOREIGN KEY (album_id) REFERENCES {Table.ALBUM_INFORMATION.value}(album_id),
+            FOREIGN KEY (track_id) REFERENCES {Table.TRACK_ATTRIBUTES.value}(track_id)
         );
         ''')
 

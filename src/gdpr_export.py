@@ -8,8 +8,7 @@ from spotify_api import get_multiple_field_information
 
 # Define the absolute folder path to the folder containing the gdrp retrieved data
 folder_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'gdpr_data')
-# Define the db
-db = Database()
+
 log = LoggerWrapper()
 
 
@@ -129,7 +128,7 @@ def _fill_missing_ids(all_songs_played, all_songs_catalogued):
     return all_songs_played
 
 
-def _insert_data_into_db(all_songs_played: list):
+def _insert_data_into_db(db: Database, all_songs_played: list):
     """
     This function takes a list of all played songs and inserts these into the database.
 
@@ -142,10 +141,9 @@ def _insert_data_into_db(all_songs_played: list):
             log.error(f'Failed adding {entry} to database, error {e}')
 
 
-def export_gdpr_data(n_limit: int = 100) -> None:
+def export_gdpr_data(db: Database, n_limit: int = 100) -> None:
     all_songs_played = _read_gdrp_data()
     all_songs_played = all_songs_played[-n_limit:]
     all_songs_catalogued = _populate_ids(all_songs_played)
     all_songs_played = _fill_missing_ids(all_songs_played, all_songs_catalogued)
-    _insert_data_into_db(all_songs_played)
-    db.close(__name__)
+    _insert_data_into_db(db, all_songs_played)

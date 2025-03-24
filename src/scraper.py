@@ -3,12 +3,10 @@ from database_handler import Database, Table
 from logger import LoggerWrapper
 from spotify_api import get_last_played_track, get_multiple_field_information
 
-# Define DB
-db = Database()
 log = LoggerWrapper()
 
 
-def scraping() -> None:
+def scraping(db: Database) -> None:
     """
     This function is the main function that will be executed when the script is run
     """
@@ -16,15 +14,14 @@ def scraping() -> None:
     scope = "user-read-recently-played"
     bearer_token = authenticate(scope)
 
-    _read_recently_played_page_and_add_to_db(bearer_token=bearer_token)
-    scrape_missing_infos()
+    _read_recently_played_page_and_add_to_db(db, bearer_token)
+    scrape_missing_infos(db)
 
 
-def _read_recently_played_page_and_add_to_db(bearer_token: str) -> None:
+def _read_recently_played_page_and_add_to_db(db: Database, bearer_token: str) -> None:
     """
     This function gets a list of song play history and adds it into the database.
     """
-    global db
 
     last_played_track = get_last_played_track(bearer_token=bearer_token)
 
@@ -40,21 +37,24 @@ def _read_recently_played_page_and_add_to_db(bearer_token: str) -> None:
                   f"\nReturned Value: {last_played_track}")
 
 
-def scrape_missing_infos() -> None:
+def scrape_missing_infos(db: Database) -> None:
     """
 
     """
     bearer_token_simple = simple_authenticate()
 
-    _process_missing_info(bearer_token_simple, Table.TRACK_INFORMATION, 'track_id', 'tracks')
-    _process_missing_info(bearer_token_simple, Table.ALBUM_INFORMATION, 'album_id', 'albums')
-    _process_missing_info(bearer_token_simple, Table.ARTIST_INFORMATION, 'artist_id', 'artists')
+    _process_missing_info(db, bearer_token_simple, Table.TRACK_INFORMATION, 'track_id', 'tracks')
+    _process_missing_info(db, bearer_token_simple, Table.ALBUM_INFORMATION, 'album_id', 'albums')
+    _process_missing_info(db, bearer_token_simple, Table.ARTIST_INFORMATION, 'artist_id', 'artists')
+    # _process_missing_info(db, bearer_token_simple, Table.TRACK_ATTRIBUTES, 'track_id', 'audio-features')
 
 
-def _process_missing_info(bearer_token_simple: str, table_name: Table, id_field_name: str, endpoint_name: str) -> None:
+def _process_missing_info(db: Database, bearer_token_simple: str, table_name: Table, id_field_name: str, endpoint_name: str) -> None:
 
     if endpoint_name == 'albums':
         limit = 20
+    elif endpoint_name == 'audio-features':
+        limit = 100
     else:
         limit = 50
 
@@ -82,19 +82,17 @@ def _process_missing_info(bearer_token_simple: str, table_name: Table, id_field_
             ids_tuple = tuple(ids)
             ids.clear()
             response = get_multiple_field_information(bearer_token_simple, endpoint_name, limit, *ids_tuple)
-            _add_data_to_database(table_name, response)
+            _add_data_to_database(db, table_name, response)
             counter = 0
 
     if len(ids) > 0:
         ids_tuple = tuple(ids)
         ids.clear()
         response = get_multiple_field_information(bearer_token_simple, endpoint_name, limit, *ids_tuple)
-        _add_data_to_database(table_name, response)
+        _add_data_to_database(db, table_name, response)
 
 
-def _add_data_to_database(table_name: Table, response) -> None:
-
-    global db
+def _add_data_to_database(db: Database, table_name: Table, response) -> None:
 
     if table_name == Table.TRACK_INFORMATION:
         log.debug('Adding track information to database')
@@ -121,3 +119,13 @@ def _add_data_to_database(table_name: Table, response) -> None:
             except IndexError:
                 genre = ""
             db.add_row(Table.ARTIST_INFORMATION, (entry['id'], entry['name'], entry['followers']['total'], genre, entry['popularity']))
+
+    elif table_name == Table.TRACK_ATTRIBUTES:
+        log.debug('Adding track attributes to database')
+        for entry in response['audio_features']:
+            log.debug(f"Adding track attributes: {entry['id']}")
+            try:
+                db.add_row(Table.TRACK_ATTRIBUTES, (entry['id'], entry['aucousticness'], entry['danceability'], entry['duration_ms'], entry['energy'], entry['instrumentalness'], entry['key'], entry['liveness'], entry['loudness'], entry['speechiness'], entry['tempo'], entry['time_signature'], entry['valence']))
+            except Exception as e:
+                log.error(f"Failed to add track attributes to database: {e}"
+                          f"\nReturned Value: {response}")

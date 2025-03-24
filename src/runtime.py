@@ -1,9 +1,11 @@
 import argparse
 import atexit
+import os
 import sys
 import traceback
 from time import sleep
 
+from database_handler import Database
 from gdpr_export import export_gdpr_data
 from logger import LoggerWrapper
 from scraper import scrape_missing_infos, scraping
@@ -49,19 +51,25 @@ if args.verbose:
     log.set_console_handler_to_debug()
     log.info('Enabled verbose mode')
 
+db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', f'spotify_scrape_{args.export}.db')
+
 if args.export == 'TEST':
     export_size = 200
     log.info(f'Scraping GDPR Data. Sample size: {export_size}')
-    export_gdpr_data(export_size)
-    scrape_missing_infos()
+    db = Database(db_path)
+    export_gdpr_data(db, export_size)
+    scrape_missing_infos(db)
 elif args.export == 'PRODUCTION':
     export_size = 1000000
     log.info('Scraping all GDPR Data.')
-    export_gdpr_data(export_size)
-    scrape_missing_infos()
+    db = Database(db_path)
+    export_gdpr_data(db, export_size)
+    scrape_missing_infos(db)
+else:
+    raise ValueError('Invalid export type. Please choose between TEST and PRODUCTION.')
 
 while True:
     log.info('Scraping API...')
-    scraping()
+    scraping(db)
     log.info('Done scraping API. Sleeping for 30 minutes...')
     sleep(1800)
