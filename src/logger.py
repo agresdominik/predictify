@@ -7,10 +7,15 @@ from pathlib import Path
 class LoggerWrapper():
 
     def __init__(self, logger_name: str = "standard_logger"):
-
         self.logger = logging.getLogger(logger_name)
-        self.logger.setLevel(logging.DEBUG)
-        self.setup_logger()
+        if not self.logger.handlers:
+            self.logger.setLevel(logging.DEBUG)
+            self.setup_logger()
+
+    def set_console_handler_to_debug(self):
+        for handler in self.logger.handlers:
+            if isinstance(handler, logging.StreamHandler):
+                handler.setLevel(logging.DEBUG)
 
     def setup_logger(self):
         # Define and create folder
