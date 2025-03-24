@@ -107,9 +107,10 @@ class Database:
             log.error(f"Error while reading all rows from table {table.value}: {e}")
             return []
 
-    def close(self):
+    def close(self, message: str):
         """Close the database connection"""
         self.conn.close()
+        log.info(f"Database connection closed from file: {message}")
 
     def get_total_overview(self) -> list:
         """Retrieve a total overview of all recently played songs with full details"""
