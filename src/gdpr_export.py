@@ -148,3 +148,4 @@ def export_gdpr_data(n_limit: int = 100) -> None:
     all_songs_catalogued = _populate_ids(all_songs_played)
     all_songs_played = _fill_missing_ids(all_songs_played, all_songs_catalogued)
     _insert_data_into_db(all_songs_played)
+    db.close(__name__)
