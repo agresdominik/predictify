@@ -1,11 +1,6 @@
 from auth import authenticate, simple_authenticate
 from database_handler import Database, Table
-from spotify_api import (
-    get_album_information,
-    get_artist_information,
-    get_last_played_track,
-    get_track_information,
-)
+from spotify_api import get_last_played_track, get_multiple_field_information
 
 
 def scraping():
@@ -16,10 +11,8 @@ def scraping():
     scope = "user-read-recently-played"
     bearer_token = authenticate(scope)
 
-    # Once each 30 mins
     _read_recently_played_page_and_add_to_db(bearer_token=bearer_token)
     scrape_missing_infos()
-
 
 
 def _read_recently_played_page_and_add_to_db(bearer_token: str):
@@ -38,41 +31,79 @@ def _read_recently_played_page_and_add_to_db(bearer_token: str):
         db.add_row(Table.RECENTLY_PLAYED, (played_at, track_id, artist_id, album_id))
     db.close()
 
+
 def scrape_missing_infos():
     """
 
     """
-
     bearer_token_simple = simple_authenticate()
 
+    _scrape_missing_info(bearer_token_simple, Table.TRACK_INFORMATION, 'track_id', 'tracks')
+    _scrape_missing_info(bearer_token_simple, Table.ALBUM_INFORMATION, 'album_id', 'albums')
+    _scrape_missing_info(bearer_token_simple, Table.ARTIST_INFORMATION, 'artist_id', 'artists')
+
+
+def _scrape_missing_info(bearer_token_simple: str, table_name: Table, id_field_name: str, endpoint_name: str):
+
+    if endpoint_name == 'albums':
+        limit = 20
+    else:
+        limit = 50
+
     db = Database()
-    # Track Info
-    all_track_ids_recently_played = db.read_all_rows(Table.RECENTLY_PLAYED, 'track_id')
-    all_track_ids_saved = db.read_all_rows(Table.TRACK_INFORMATION, 'track_id')
-    all_track_ids_missing = list(set(all_track_ids_recently_played) - set(all_track_ids_saved))
-    for track_id in all_track_ids_missing:
-        response = get_track_information(track_id=track_id[0], bearer_token=bearer_token_simple)
-        db.add_row(Table.TRACK_INFORMATION, (response['id'], response['name'], response['duration_ms'], response['explicit'], response['popularity']))
-    # Album Info
-    all_album_ids_recently_played = db.read_all_rows(Table.RECENTLY_PLAYED, 'album_id')
-    all_album_ids_saved = db.read_all_rows(Table.ALBUM_INFORMATION, 'album_id')
-    all_album_ids_missing = list(set(all_album_ids_recently_played) - set(all_album_ids_saved))
-    for album_id in all_album_ids_missing:
-        response = get_album_information(album_id=album_id[0], bearer_token=bearer_token_simple)
-        try:
-            release_year = response['release_date'][:4]
-        except Exception:
-            release_year = ""
-        db.add_row(Table.ALBUM_INFORMATION, (response['id'], response['name'], response['album_type'], response['total_tracks'], release_year, response['label']))
-    # Artist Info
-    all_artist_ids_recently_played = db.read_all_rows(Table.RECENTLY_PLAYED, 'artist_id')
-    all_artist_ids_saved = db.read_all_rows(Table.ARTIST_INFORMATION, 'artist_id')
-    all_artist_ids_missing = list(set(all_artist_ids_recently_played) - set(all_artist_ids_saved))
-    for artist_id in all_artist_ids_missing:
-        response = get_artist_information(artist_id=artist_id[0], bearer_token=bearer_token_simple)
-        try:
-            genre = response['genres'][0]
-        except IndexError:
-            genre = ""
-        db.add_row(Table.ARTIST_INFORMATION, (response['id'], response['name'], response['followers']['total'], genre, response['popularity']))
+    all_ids_recently_played = db.read_all_rows(Table.RECENTLY_PLAYED, id_field_name)
+    all_ids_saved = db.read_all_rows(table_name, id_field_name)
+    all_ids_missing = list(set(all_ids_recently_played) - set(all_ids_saved))
+    db.close()
+
+    ids = []
+    processed_ids = set()
+
+    counter = 0
+
+    for id_value in all_ids_missing:
+
+        id_value_str = id_value[0]
+
+        if id_value_str not in processed_ids:
+            ids.append(id_value_str)
+            processed_ids.add(id_value_str)
+            counter += 1
+
+        if (counter + 1) % limit == 0 and len(ids) > 0:
+            ids_tuple = tuple(ids)
+            ids.clear()
+            response = get_multiple_field_information(bearer_token_simple, endpoint_name, limit, *ids_tuple)
+            _add_data_to_database(table_name, response)
+            counter = 0
+
+    if len(ids) > 0:
+        ids_tuple = tuple(ids)
+        ids.clear()
+        response = get_multiple_field_information(bearer_token_simple, endpoint_name, limit, *ids_tuple)
+        _add_data_to_database(table_name, response)
+
+
+def _add_data_to_database(table_name: Table, response):
+
+    db = Database()
+    if table_name == Table.TRACK_INFORMATION:
+        for entry in response['tracks']:
+            db.add_row(table_name, (entry['id'], entry['name'], entry['duration_ms'], entry['explicit'], entry['popularity']))
+
+    elif table_name == Table.ALBUM_INFORMATION:
+        for entry in response['albums']:
+            try:
+                release_year = entry['release_date'][:4]
+            except Exception:
+                release_year = ""
+            db.add_row(table_name, (entry['id'], entry['name'], entry['album_type'], entry['total_tracks'], release_year, entry['label']))
+
+    elif table_name == Table.ARTIST_INFORMATION:
+        for entry in response['artists']:
+            try:
+                genre = entry['genres'][0]
+            except IndexError:
+                genre = ""
+            db.add_row(Table.ARTIST_INFORMATION, (entry['id'], entry['name'], entry['followers']['total'], genre, entry['popularity']))
     db.close()
