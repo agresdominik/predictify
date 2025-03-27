@@ -157,6 +157,9 @@ venv/
 env.bak/
 venv.bak/
 
+# Emacs autosave files
+*#*#
+
 # Spyder project settings
 .spyderproject
 .spyproject
