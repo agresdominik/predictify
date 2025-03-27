@@ -2,15 +2,11 @@ from auth import authenticate, simple_authenticate
 from database_handler import Database, Table
 from spotify_api import get_last_played_track, get_multiple_field_information
 
-# Define DB
-db = Database()
-
 
 def scraping():
     """
     This function is the main function that will be executed when the script is run
     """
-    global db
 
     scope = "user-read-recently-played"
     bearer_token = authenticate(scope)
@@ -23,16 +19,17 @@ def _read_recently_played_page_and_add_to_db(bearer_token: str):
     """
     This function gets a list of song play history and adds it into the database.
     """
-    global db
 
     last_played_track = get_last_played_track(bearer_token=bearer_token)
 
+    db = Database()
     for track in reversed(last_played_track['items']):
         track_id = track['track']['id']
         played_at = track['played_at']
         album_id = track['track']['album']['id']
         artist_id = track['track']['artists'][0]['id']
         db.add_row(Table.RECENTLY_PLAYED, (played_at, track_id, artist_id, album_id))
+    db.close()
 
 
 def scrape_missing_infos():
@@ -53,9 +50,11 @@ def _scrape_missing_info(bearer_token_simple: str, table_name: Table, id_field_n
     else:
         limit = 50
 
+    db = Database()
     all_ids_recently_played = db.read_all_rows(Table.RECENTLY_PLAYED, id_field_name)
     all_ids_saved = db.read_all_rows(table_name, id_field_name)
     all_ids_missing = list(set(all_ids_recently_played) - set(all_ids_saved))
+    db.close()
 
     ids = []
     processed_ids = set()
@@ -87,8 +86,7 @@ def _scrape_missing_info(bearer_token_simple: str, table_name: Table, id_field_n
 
 def _add_data_to_database(table_name: Table, response):
 
-    global db
-
+    db = Database()
     if table_name == Table.TRACK_INFORMATION:
         for entry in response['tracks']:
             db.add_row(table_name, (entry['id'], entry['name'], entry['duration_ms'], entry['explicit'], entry['popularity']))
@@ -108,3 +106,4 @@ def _add_data_to_database(table_name: Table, response):
             except IndexError:
                 genre = ""
             db.add_row(Table.ARTIST_INFORMATION, (entry['id'], entry['name'], entry['followers']['total'], genre, entry['popularity']))
+    db.close()
