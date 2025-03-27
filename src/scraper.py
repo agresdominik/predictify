@@ -7,15 +7,11 @@ from spotify_api import (
     get_track_information,
 )
 
-# Define DB
-db = Database()
-
 
 def scraping():
     """
     This function is the main function that will be executed when the script is run
     """
-    global db
 
     scope = "user-read-recently-played"
     bearer_token = authenticate(scope)
@@ -24,33 +20,32 @@ def scraping():
     _read_recently_played_page_and_add_to_db(bearer_token=bearer_token)
     scrape_missing_infos()
 
-    db.close()
 
 
 def _read_recently_played_page_and_add_to_db(bearer_token: str):
     """
     This function gets a list of song play history and adds it into the database.
     """
-    global db
 
     last_played_track = get_last_played_track(bearer_token=bearer_token)
 
+    db = Database()
     for track in reversed(last_played_track['items']):
         track_id = track['track']['id']
         played_at = track['played_at']
         album_id = track['track']['album']['id']
         artist_id = track['track']['artists'][0]['id']
         db.add_row(Table.RECENTLY_PLAYED, (played_at, track_id, artist_id, album_id))
-
+    db.close()
 
 def scrape_missing_infos():
     """
 
     """
-    global db
 
     bearer_token_simple = simple_authenticate()
 
+    db = Database()
     # Track Info
     all_track_ids_recently_played = db.read_all_rows(Table.RECENTLY_PLAYED, 'track_id')
     all_track_ids_saved = db.read_all_rows(Table.TRACK_INFORMATION, 'track_id')
@@ -80,3 +75,4 @@ def scrape_missing_infos():
         except IndexError:
             genre = ""
         db.add_row(Table.ARTIST_INFORMATION, (response['id'], response['name'], response['followers']['total'], genre, response['popularity']))
+    db.close()
