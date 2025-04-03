@@ -1,6 +1,5 @@
 import base64
 import json
-import logging as log
 import os
 import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -9,7 +8,11 @@ from urllib.parse import parse_qs, urlencode, urlparse
 import dotenv
 import requests
 
+from logger import LoggerWrapper
+
 TOKEN_FILE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'tokens.json')
+
+log = LoggerWrapper()
 
 
 def simple_authenticate(grant_type: str = "client_credentials") -> str:
@@ -32,13 +35,17 @@ def simple_authenticate(grant_type: str = "client_credentials") -> str:
         "grant_type": f"{grant_type}"
     }
 
-    response = requests.post(token_url, headers=headers, data=data)
+    try:
+        response = requests.post(token_url, headers=headers, data=data)
+    except requests.exceptions.RequestException as e:
+        log.error(f"Error authenticating: {e}")
+        return None
 
     if response.status_code == 200:
         access_token = response.json().get('access_token')
         return access_token
     else:
-        log.error(f"Error {response.status_code}: {response.text}")
+        log.error(f"Error authenticating {response.status_code}: {response.text}")
 
 
 def authenticate(scope: str) -> str:
@@ -101,10 +108,14 @@ def _read_env_file() -> tuple:
 
     :return: tuple
     """
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    dotenv_folder_path = os.path.join(current_dir, '../config')
-    dotenv_path = os.path.join(dotenv_folder_path, '.env')
-    contents = dotenv.dotenv_values(dotenv_path=dotenv_path)
+    try:
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        dotenv_folder_path = os.path.join(current_dir, '../config')
+        dotenv_path = os.path.join(dotenv_folder_path, '.env')
+        contents = dotenv.dotenv_values(dotenv_path=dotenv_path)
+    except Exception as e:
+        log.error(f"Error reading the .env file: {e}")
+        return None
     spotify_client_id = contents['SPOTIFY_CLIENT_ID']
     spotify_client_secret = contents['SPOTIFY_CLIENT_SECRET']
     spotify_redirect_uri = contents['SPOTIFY_REDIRECT_URI']
@@ -158,7 +169,12 @@ def _exchange_code_for_token(code: str, redirect_uri: str, client_id: str, clien
         'client_secret': client_secret,
     }
 
-    response = requests.post(token_url, data=data, headers=headers)
+    try:
+        response = requests.post(token_url, data=data, headers=headers)
+    except requests.exceptions.RequestException as e:
+        log.error(f"Error exchanging code for token: {e}")
+        return None
+
     response_data = response.json()
 
     if 'access_token' not in response_data:
@@ -192,7 +208,12 @@ def _refresh_access_token(refresh_token: str, client_id: str, client_secret: str
         'client_secret': client_secret,
     }
 
-    response = requests.post(token_url, data=data, headers=headers)
+    try:
+        response = requests.post(token_url, data=data, headers=headers)
+    except requests.exceptions.RequestException as e:
+        log.error(f"Error refreshing access token: {e}")
+        return None
+
     response_data = response.json()
 
     if 'access_token' not in response_data:
