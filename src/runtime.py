@@ -54,7 +54,7 @@ if args.verbose:
 db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', f'spotify_scrape_{args.export}.db')
 
 if args.export == 'TEST':
-    export_size = 200
+    export_size = 10000
     log.info(f'Scraping GDPR Data. Sample size: {export_size}')
     db = Database(db_path)
     export_gdpr_data(db, export_size)
