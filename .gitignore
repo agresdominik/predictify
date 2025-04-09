@@ -1,5 +1,12 @@
+# Machine Learning grid search
+my_dir/
+
 # Audio previews
 audio_previews/
+
+# Audio data files
+audio_features*
+audio_data/
 
 # My testing file
 main_test.py
