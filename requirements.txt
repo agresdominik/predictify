@@ -13,3 +13,5 @@ keras-tuner==1.4.7
 scikeras==0.13.0
 matplotlib==3.10.1
 seaborn==0.13.2
+librosa==0.11.0
+optuna==4.2.1
