@@ -26,7 +26,3 @@ def get_spotify_preview_url(spotify_track_id: str) -> Optional[str]:
     except Exception as e:
         print(f"Failed to fetch Spotify preview URL: {e}")
         return None
-
-
-# example usage:
-preview_url = get_spotify_preview_url('1301WleyT98MSxVHPZCA6M')
