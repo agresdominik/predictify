@@ -4,3 +4,14 @@ pre-commit==4.1.0
 pytest==8.3.5
 coverage==7.7.0
 pytest-cov==6.0.0
+pandas==2.2.3
+numpy==1.26.4
+scikit-learn==1.6.1
+tensorflow==2.19.0
+keras==3.9.2
+keras-tuner==1.4.7
+scikeras==0.13.0
+matplotlib==3.10.1
+seaborn==0.13.2
+librosa==0.11.0
+optuna==4.2.1

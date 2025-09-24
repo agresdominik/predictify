@@ -1,11 +1,31 @@
+# Machine Learning grid search
+my_dir/
+
+# Audio previews
+audio_previews/
+
+# Audio data files
+audio_features*
+audio_data/
+
+# My testing file
+main_test.py
+
+# .db
+*.db
+
+# DS_Store
+.DS_Store
+
+# Gdpr Data file
+Streaming_History*
+
 # Test running file
 main_test.py
 
-# databases
-*.db
-
-# Custom Tokens file/rotator
-tokens.json
+# data dir
+data/*
+data-docker/
 
 # Visual Studio Code
 .vscode/
