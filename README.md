@@ -1,5 +1,9 @@
 # Predictify
 
+## Branch Note 
+
+This branch contains the unorganised codebase of the project as worked on during the class, many parts like the README are out-of-date
+
 ## Overview
 
 A Data analysis tool to scrape your Spotify History usage and let a ML-Model predict your next songs
